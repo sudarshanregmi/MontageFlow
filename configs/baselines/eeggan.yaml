@@ -1,0 +1,7 @@
+# EEG-GAN: class-conditional WGAN-GP.
+model:
+  type: gan
+train:
+  steps: 54000
+  lr: 1.0e-4
+  micro_batch: 128

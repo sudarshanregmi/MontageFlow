@@ -1,0 +1,9 @@
+# Ablation row 2: row 1 with velocity prediction.
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: false
+  projection: false
+  latent_dim: 0
+  loss: l1

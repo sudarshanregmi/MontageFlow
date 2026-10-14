@@ -1,0 +1,11 @@
+# MontageFlow trained with a squared-error loss instead of L1.
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: true
+  projection: true
+  latent_dim: 256
+  encoder_patch: 100
+  latent_noise: 1.0
+  loss: l2

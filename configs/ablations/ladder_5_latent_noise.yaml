@@ -1,0 +1,12 @@
+# Ablation row 5: row 4 with latent perturbation. Row 6 evaluates this model with
+# projection at sampling time only (scripts/evaluate.py --project).
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: true
+  projection: false
+  latent_dim: 256
+  encoder_patch: 100
+  latent_noise: 1.0
+  loss: l1
