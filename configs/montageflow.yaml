@@ -1,0 +1,12 @@
+# MontageFlow: velocity flow matching with cross-channel attention, montage projection
+# and latent conditioning.
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: true
+  projection: true
+  latent_dim: 256
+  encoder_patch: 100
+  latent_noise: 1.0
+  loss: l1

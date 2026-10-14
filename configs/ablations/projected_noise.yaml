@@ -1,0 +1,12 @@
+# MontageFlow with the training noise also projected onto ker A.
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: true
+  projection: true
+  project_train_noise: true
+  latent_dim: 256
+  encoder_patch: 100
+  latent_noise: 1.0
+  loss: l1

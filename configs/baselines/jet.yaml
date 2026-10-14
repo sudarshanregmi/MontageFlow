@@ -1,0 +1,15 @@
+# JET: clean-signal prediction, channels generated independently, auxiliary losses
+# with the weights of JET's released training scripts.
+model:
+  type: flow
+  prediction: x
+  patch: 200
+  cross_channel: false
+  projection: false
+  latent_dim: 0
+  loss: l1
+  stat_weight: 1.0
+  tv_weight: 0.1
+  corr_weight: 0.1
+train:
+  micro_batch: 128

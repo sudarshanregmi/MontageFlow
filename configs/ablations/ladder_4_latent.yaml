@@ -1,0 +1,11 @@
+# Ablation row 4: vanilla flow matching (row 3) with latent conditioning, no perturbation.
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: true
+  projection: false
+  latent_dim: 256
+  encoder_patch: 100
+  latent_noise: 0.0
+  loss: l1

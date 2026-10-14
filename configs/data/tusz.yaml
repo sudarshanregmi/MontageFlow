@@ -1,0 +1,5 @@
+data:
+  train: data/tusz/train
+  test: data/tusz/test
+train:
+  steps: 100000

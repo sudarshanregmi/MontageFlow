@@ -1,0 +1,11 @@
+# MontageDiff: MontageFlow's montage projection and latent conditioning on a DDPM
+# (epsilon prediction, sampled with 50 deterministic DDIM steps).
+model:
+  type: diffusion
+  patch: 100
+  cross_channel: true
+  projection: true
+  latent_dim: 256
+  encoder_patch: 100
+  latent_noise: 1.0
+  loss: l1

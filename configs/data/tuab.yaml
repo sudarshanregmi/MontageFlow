@@ -1,0 +1,5 @@
+data:
+  train: data/tuab/train
+  test: data/tuab/test
+train:
+  steps: 100000

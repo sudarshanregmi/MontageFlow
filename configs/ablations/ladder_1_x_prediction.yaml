@@ -1,0 +1,9 @@
+# Ablation row 1: flow matching with clean-signal prediction, channels independent.
+model:
+  type: flow
+  prediction: x
+  patch: 100
+  cross_channel: false
+  projection: false
+  latent_dim: 0
+  loss: l1

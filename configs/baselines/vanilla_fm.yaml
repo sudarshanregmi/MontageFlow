@@ -1,0 +1,9 @@
+# Vanilla flow matching: MontageFlow without the latent and without projection.
+model:
+  type: flow
+  prediction: velocity
+  patch: 100
+  cross_channel: true
+  projection: false
+  latent_dim: 0
+  loss: l1

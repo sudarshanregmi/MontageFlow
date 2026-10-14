@@ -1,0 +1,6 @@
+# Vanilla diffusion: DDPM (epsilon prediction), sampled with 50 deterministic DDIM steps.
+model:
+  type: diffusion
+  patch: 100
+  cross_channel: true
+  loss: l1
