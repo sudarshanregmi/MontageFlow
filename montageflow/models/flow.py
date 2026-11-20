@@ -25,8 +25,7 @@ class FlowConfig:
     cross_channel: bool = True
     prediction: str = "velocity"          # "velocity" or "x" (clean-signal prediction, as in JET)
     loss: str = "l1"                      # "l1" or "l2"
-    projection: bool = True               # project network output and initial noise onto ker A
-    project_train_noise: bool = False     # also project the noise used to build x_t in training
+    projection: bool = True               # project the network output onto ker A
     latent_dim: int = 256                 # 0 disables latent conditioning
     encoder_width: int = 512
     encoder_depth: int = 8
@@ -97,8 +96,6 @@ class FlowModel(nn.Module):
         t = torch.sigmoid(torch.randn(x.shape[0], device=x.device) * cfg.time_std + cfg.time_mean)
         t = t.view(-1, 1, 1, 1)
         e = torch.randn_like(x)
-        if cfg.projection and cfg.project_train_noise:
-            e = self._project(e)
         x_t = t * x + (1 - t) * e
 
         out = self.net(x_t, t.flatten(), y, h)
@@ -133,8 +130,10 @@ class FlowModel(nn.Module):
                project: Optional[bool] = None) -> torch.Tensor:
         """Generate windows for the given labels (and latents, if the model uses them).
 
-        `project` overrides the configured projection at sampling time; it is how the
-        "projection at inference only" ablation is run on a model trained without it.
+        A model trained with the projection starts from Gaussian noise x_0, as in training, and the
+        part of the state outside ker A decays as (1 - t) Q x_0. `project` overrides the configured
+        projection; on a model trained without it, `project=True` also projects x_0 ("projection
+        at inference only").
         """
         cfg = self.cfg
         if self.has_latent != (h is not None):
@@ -146,7 +145,11 @@ class FlowModel(nn.Module):
         B, device = labels.shape[0], labels.device
 
         x = torch.randn((B, self.channels, self.num_patches, self.patch), device=device)
-        if project:
+        null = 0.0
+        if project and cfg.projection:
+            assert cfg.prediction == "velocity"
+            null = x - self._project(x)                 # Q x_0
+        elif project:
             x = self._project(x)
         grid = torch.linspace(0.0, 1.0, steps + 1, device=device)
         for i in range(steps):
@@ -155,5 +158,7 @@ class FlowModel(nn.Module):
             if project:
                 out = self._project(out)
             v = out if cfg.prediction == "velocity" else (out - x) / max(cfg.t_eps, 1.0 - t)
-            x = x + (t_next - t) * v
+            x = x + (t_next - t) * (v - null)
+        if project:
+            x = self._project(x)
         return x.reshape(B, self.channels, self.length)

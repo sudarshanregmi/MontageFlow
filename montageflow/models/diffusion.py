@@ -28,7 +28,7 @@ class DiffusionConfig:
     beta_end: float = 2e-2
     loss: str = "l1"                      # "l1" or "l2" on the predicted noise
     label_dropout: float = 0.1
-    projection: bool = False              # project the noise prediction and initial noise onto ker A
+    projection: bool = False              # project the noise prediction onto ker A
     latent_dim: int = 0                   # 0 disables latent conditioning
     encoder_width: int = 512
     encoder_depth: int = 8
@@ -110,7 +110,9 @@ class DiffusionModel(nn.Module):
                project: Optional[bool] = None) -> torch.Tensor:
         """Generate windows for the given labels (and latents, if the model uses them).
 
-        `project` overrides the configured projection at sampling time.
+        A model trained with the projection keeps the part of the starting noise outside ker A in
+        the network input, at the noise level of each step, as in training. `project` overrides the
+        configured projection at sampling time.
         """
         cfg = self.cfg
         if self.has_latent != (h is not None):
@@ -122,12 +124,16 @@ class DiffusionModel(nn.Module):
         B, device = labels.shape[0], labels.device
         ts = torch.linspace(cfg.timesteps - 1, 0, steps, device=device).long()
         x = torch.randn(B, self.channels, self.num_patches, self.patch, device=device)
+        null = 0.0
         if project:
+            if cfg.projection:
+                null = (x - self._project(x)) / (1 - self.alpha_bar[ts[0]]).sqrt()
             x = self._project(x)
         for i, t in enumerate(ts):
             a_t = self.alpha_bar[t]
             a_prev = self.alpha_bar[ts[i + 1]] if i + 1 < len(ts) else torch.tensor(1.0, device=device)
-            eps = self.net(x, torch.full((B,), float(t) / cfg.timesteps, device=device), labels, h)
+            x_in = x + (1 - a_t).sqrt() * null
+            eps = self.net(x_in, torch.full((B,), float(t) / cfg.timesteps, device=device), labels, h)
             if project:
                 eps = self._project(eps)
             x0 = (x - (1 - a_t).sqrt() * eps) / a_t.sqrt().clamp_min(1e-8)

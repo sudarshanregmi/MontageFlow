@@ -27,7 +27,7 @@ global latent $h$. The decoder receives the current flow state $X_t$, flow time 
 perturbed latent $\tilde h$, and predicts a velocity field. After encoder-decoder training, a
 class-conditional rectified-flow prior $p_\psi(h \mid y)$ is fitted to the encoded training latents and
 replaces the encoder during generation. The predicted velocity is projected onto $\ker A$. At inference,
-the Gaussian source is also projected to guarantee valid EEG.
+the part of the Gaussian source outside $\ker A$ decays to zero, as in training, so the generated EEG is valid.
 
 ## Setup
 
@@ -97,7 +97,7 @@ Settings can be overridden on the command line, e.g. `train.steps=1000`. Trainin
 latest checkpoint in `--out`. The defaults are the paper's settings: batch 128, learning rate 5e-5
 after a 2.5-epoch warmup, EMA 0.9999, class-balanced sampling, 100k steps.
 
-After training any model with a latent (MontageFlow, MontageDiff, ablation rows 4 and 5, projected training noise, L2 loss), fit its latent prior and, optionally, export a release directory:
+After training any model with a latent (MontageFlow, MontageDiff, ablation rows 4 and 5, L2 loss), fit its latent prior and, optionally, export a release directory:
 
 ```bash
 python scripts/fit_prior.py runs/montageflow_tuab/ckpt_0099999.pt
@@ -113,7 +113,7 @@ python scripts/export.py runs/montageflow_tuab/ckpt_0099999.pt release/tuab
 | `configs/baselines/jet.yaml`, `jet_x.yaml` | JET, JET<sup>×</sup> |
 | `configs/baselines/eeggan.yaml` | EEG-GAN |
 | `configs/ablations/ladder_1_x_prediction.yaml`, `ladder_2_velocity.yaml`, `ladder_4_latent.yaml`, `ladder_5_latent_noise.yaml` | Ablation table, rows 1, 2, 4 and 5 (row 3 uses `vanilla_fm.yaml`, row 6 uses `montageflow.yaml`) |
-| `configs/ablations/projected_noise.yaml`, `l2_loss.yaml` | Projected training noise, L2 loss |
+| `configs/ablations/l2_loss.yaml` | L2 loss |
 
 For the "inference only" row of the post-hoc projection table, evaluate the row-5 model with
 `--project`. For the prior-label ablation, fit the prior without labels:

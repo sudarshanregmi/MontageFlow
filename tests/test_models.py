@@ -56,6 +56,28 @@ def test_projection_at_sampling_only():
     assert montage.montage_index(x) < 1e-5
 
 
+def test_sampling_follows_the_training_path():
+    model = build_model({"type": "flow", **SMALL, "latent_dim": 0}).eval()
+    states = []
+    model.net.register_forward_pre_hook(lambda _, args: states.append(args[0]))
+    x = model.sample(torch.tensor([0, 1]), steps=4)
+    null = [s - montage.project(s, model.P) for s in states]
+    assert null[0].abs().max() > 0.1
+    assert all(torch.allclose(n, (1 - i / 4) * null[0], atol=1e-5) for i, n in enumerate(null))
+    assert montage.montage_index(x.numpy()) < 1e-5
+
+
+def test_diffusion_sampling_follows_the_training_path():
+    model = build_model({"type": "diffusion", **SMALL, "timesteps": 50, "projection": True, "latent_dim": 0}).eval()
+    states = []
+    model.net.register_forward_pre_hook(lambda _, args: states.append(args[0]))
+    model.sample(torch.tensor([0, 1]), steps=4)
+    null = [s - montage.project(s, model.P) for s in states]
+    level = (1 - model.alpha_bar[torch.linspace(49, 0, 4).long()]).sqrt()
+    assert null[0].abs().max() > 0.1
+    assert all(torch.allclose(n, level[i] / level[0] * null[0], atol=1e-5) for i, n in enumerate(null))
+
+
 def test_diffusion_and_gan():
     for spec in ({"type": "diffusion", **SMALL, "timesteps": 50},
                  {"type": "gan", "channels": 16, "length": 200, "num_classes": 2, "width": 32,
